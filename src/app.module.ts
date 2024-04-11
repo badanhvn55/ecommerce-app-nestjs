@@ -1,23 +1,31 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { ProductModule } from './product/product.module';
-import { MongooseModule } from '@nestjs/mongoose';
-import { UserModule } from './user/user.module';
-import { AuthModule } from './auth/auth.module';
-import { CartModule } from './cart/cart.module';
-import { ConfigModule } from '@nestjs/config';
+import { EnvironmentConfigModule } from './infrastructure/config/environment-config/environment-config.module';
+import { LoggerModule } from './infrastructure/logger/logger.module';
+import { ExceptionsModule } from './infrastructure/exceptions/exceptions.module';
+import { UsecasesProxyModule } from './infrastructure/usecases-proxy/usecases-proxy.module';
+import { ControllersModule } from './infrastructure/controllers/controllers.module';
+import { BcryptModule } from './infrastructure/services/bcrypt/bcrypt.module';
+import { JwtModule as JwtServiceModule } from './infrastructure/services/jwt/jwt.module';
+import { PassportModule } from '@nestjs/passport';
+import { JwtModule } from '@nestjs/jwt';
+import { LocalStrategy } from './infrastructure/common/strategies/local.strategy';
+import { JwtStrategy } from './infrastructure/common/strategies/jwt.strategy';
+import { JwtRefreshTokenStrategy } from './infrastructure/common/strategies/jwtRefresh.strategy';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
-    MongooseModule.forRoot('mongodb://localhost/store'),
-    ProductModule,
-    UserModule,
-    AuthModule,
-    CartModule
+    PassportModule,
+    JwtModule.register({
+      secret: process.env.secret,
+    }),
+    LoggerModule,
+    ExceptionsModule,
+    UsecasesProxyModule.register(),
+    ControllersModule,
+    BcryptModule,
+    JwtServiceModule,
+    EnvironmentConfigModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  providers: [LocalStrategy, JwtStrategy, JwtRefreshTokenStrategy],
 })
 export class AppModule { }
